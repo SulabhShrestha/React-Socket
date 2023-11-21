@@ -1,16 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import MessageModel from "./model/message_model";
 
+const socket = io("http://localhost:3000");
+
 function App() {
-  const socket = io("http://localhost:3000");
-
   const [messages, setMessages] = useState([]);
-
-  // connection socket
-  socket.on("connect", () => {
-    console.log("Socket connected");
-  });
 
   // receive message
   socket.on("message", (message) => {
@@ -18,12 +13,15 @@ function App() {
     setMessages([...messages, message]);
   });
 
-  // disconnect socket
-  socket.on("disconnect", () => {
-    console.log("Socket disconnected");
-  });
-
   const formRef = useRef(null);
+  const messagesRef = useRef(null);
+
+  useEffect(() => {
+    // Scroll to the bottom of the messages div when messages change
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // send message
   const sendMessage = (e) => {
@@ -39,20 +37,45 @@ function App() {
     }
   };
   return (
-    <>
-      <div className="messages">
+    <main className="h-screen flex flex-col">
+      <div
+        className="messages flex-grow overflow-y-auto
+      "
+        ref={messagesRef}
+      >
         {messages.map((message, index) => (
-          <p key={index}>
-            Sent by: {message.sender} at {message.date.toLocaleString()}{" "}
-            {message.msg}
+          <p
+            key={index}
+            className={`mx-10 max-w-max text-2xl my-2 ${
+              message.sender === socket.id
+                ? "bg-green-400 ml-auto"
+                : "bg-blue-400 mr-auto"
+            }`}
+          >
+            Sent at: {message.date.toLocaleString()}, Message: {message.msg}
           </p>
         ))}
       </div>
-      <form action="" ref={formRef} onSubmit={sendMessage}>
-        <input type="text" name="" id="" placeholder="Enter a message" />
-        <input type="submit" value="Send" />
+      <form
+        action=""
+        ref={formRef}
+        onSubmit={sendMessage}
+        className="justify-self-end bg-gray-400 px-8 py-2 mb-2 flex"
+      >
+        <input
+          type="text"
+          name=""
+          id=""
+          placeholder="Enter a message"
+          className="flex-grow p-2 mr-4 rounded-lg"
+        />
+        <input
+          type="submit"
+          value="Send"
+          className="bg-blue-500 px-4 rounded-lg"
+        />
       </form>
-    </>
+    </main>
   );
 }
 

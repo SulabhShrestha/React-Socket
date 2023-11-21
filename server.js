@@ -16,8 +16,11 @@ io.on("connection", (socket) => {
   console.log("A new user is connected: " + socket.id);
 
   socket.on("message", (data) => {
-    console.log(data);
-    io.emit("message", data);
+    socket.broadcast.emit("message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
 
