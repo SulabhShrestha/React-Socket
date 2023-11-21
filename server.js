@@ -21,6 +21,12 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+
+    // notifiying other about the user left the chat
+    socket.broadcast.emit(
+      "someone-left-the-chat",
+      "User left the chat: " + socket.id
+    );
   });
 });
 

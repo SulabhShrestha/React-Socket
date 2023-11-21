@@ -7,12 +7,6 @@ const socket = io("http://localhost:3000");
 function App() {
   const [messages, setMessages] = useState([]);
 
-  // receive message
-  socket.on("message", (message) => {
-    console.log("Message received: ", message);
-    setMessages([...messages, message]);
-  });
-
   const formRef = useRef(null);
   const messagesRef = useRef(null);
 
@@ -22,6 +16,22 @@ function App() {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // receive message
+  socket.on("message", (message) => {
+    console.log("Message received: ", message);
+    setMessages([...messages, message]);
+  });
+
+  // when someone left the chat
+  socket.on("someone-left-the-chat", (message) => {
+    const chatLeftMessage = document.createElement("p");
+    chatLeftMessage.textContent = message;
+
+    if (messagesRef.current) {
+      messagesRef.current.appendChild(chatLeftMessage);
+    }
+  });
 
   // send message
   const sendMessage = (e) => {
