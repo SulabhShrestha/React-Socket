@@ -13,7 +13,12 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-  console.log("A new user is connected");
+  console.log("A new user is connected: " + socket.id);
+
+  socket.on("message", (data) => {
+    console.log(data);
+    io.emit("message", data);
+  });
 });
 
 httpServer.listen(3000, () => {
