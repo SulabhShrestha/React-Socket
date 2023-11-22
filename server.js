@@ -16,17 +16,14 @@ io.on("connection", (socket) => {
   console.log("A new user is connected: " + socket.id);
 
   socket.on("message", (data) => {
-    socket.broadcast.emit("message", data);
+    socket.broadcast.volatile.emit("message", data);
   });
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
 
     // notifiying other about the user left the chat
-    socket.broadcast.emit(
-      "someone-left-the-chat",
-      "User left the chat: " + socket.id
-    );
+    socket.broadcast.volatile.emit("someone-left-the-chat", socket.id);
   });
 });
 

@@ -6,9 +6,9 @@ const socket = io("http://localhost:3000");
 
 function App() {
   const [messages, setMessages] = useState([]);
-
   const formRef = useRef(null);
   const messagesRef = useRef(null);
+  const leftChatProcessed = useRef(false); // Flag to track if "someone-left-the-chat" event is processed
 
   useEffect(() => {
     // Scroll to the bottom of the messages div when messages change
@@ -20,16 +20,25 @@ function App() {
   // receive message
   socket.on("message", (message) => {
     console.log("Message received: ", message);
-    setMessages([...messages, message]);
+    setMessages((prevMessages) => [...prevMessages, message]);
   });
 
-  // when someone left the chat
-  socket.on("someone-left-the-chat", (message) => {
-    const chatLeftMessage = document.createElement("p");
-    chatLeftMessage.textContent = message;
+  console.log("asdf");
 
-    if (messagesRef.current) {
-      messagesRef.current.appendChild(chatLeftMessage);
+  // when someone left the chat
+  socket.on("someone-left-the-chat", (user) => {
+    if (!leftChatProcessed.current) {
+      const chatLeftMessage = document.createElement("p");
+      chatLeftMessage.textContent = user + " left the chat";
+
+      chatLeftMessage.classList.add("text-center", "text-sm", "mx-2");
+
+      if (messagesRef.current) {
+        messagesRef.current.appendChild(chatLeftMessage);
+      }
+
+      // Set the flag to true after processing the event
+      leftChatProcessed.current = true;
     }
   });
 
@@ -37,22 +46,19 @@ function App() {
   const sendMessage = (e) => {
     e.preventDefault();
     const message = formRef.current[0].value;
-    if (message !== "") {
+    if (message.trim() !== "") {
       socket.emit("message", new MessageModel(socket.id, new Date(), message));
       formRef.current[0].value = "";
-      setMessages([
-        ...messages,
+      setMessages((prevMessages) => [
+        ...prevMessages,
         new MessageModel(socket.id, new Date(), message),
       ]);
     }
   };
+
   return (
     <main className="h-screen flex flex-col">
-      <div
-        className="messages flex-grow overflow-y-auto
-      "
-        ref={messagesRef}
-      >
+      <div className="messages flex-grow overflow-y-auto" ref={messagesRef}>
         {messages.map((message, index) => (
           <p
             key={index}
