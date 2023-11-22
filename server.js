@@ -15,15 +15,17 @@ const io = new Server(httpServer, {
 io.on("connection", (socket) => {
   console.log("A new user is connected: " + socket.id);
 
+  io.emit("new-user-connected", socket.id); // notifying all about the new user
+
   socket.on("message", (data) => {
-    socket.broadcast.volatile.emit("message", data);
+    socket.broadcast.emit("message", data); // returning group message
   });
 
+  // notifiying other about the user left the chat
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
 
-    // notifiying other about the user left the chat
-    socket.broadcast.volatile.emit("someone-left-the-chat", socket.id);
+    socket.broadcast.emit("someone-left-the-chat", socket.id);
   });
 });
 

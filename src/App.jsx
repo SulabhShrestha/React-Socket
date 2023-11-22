@@ -8,8 +8,8 @@ function App() {
   const [messages, setMessages] = useState([]);
   const formRef = useRef(null);
   const messagesRef = useRef(null);
-  const leftChatProcessed = useRef(false); // Flag to track if "someone-left-the-chat" event is processed
 
+  // scrolling to bottom whenever messages updated
   useEffect(() => {
     // Scroll to the bottom of the messages div when messages change
     if (messagesRef.current) {
@@ -17,30 +17,53 @@ function App() {
     }
   }, [messages]);
 
-  // receive message
-  socket.on("message", (message) => {
-    console.log("Message received: ", message);
-    setMessages((prevMessages) => [...prevMessages, message]);
-  });
+  // register the socket and listen to events
+  useEffect(() => {
+    // receive message
+    socket.on("message", (message) => {
+      console.log("Message received: ", message);
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
 
-  console.log("asdf");
+    // when someone is connected to the group
+    socket.on("new-user-connected", (id) => {
+      const chatJoinedMessage = document.createElement("p");
+      chatJoinedMessage.classList.add(
+        "text-center",
+        "text-sm",
+        "mx-2",
+        "bg-green-500"
+      );
 
-  // when someone left the chat
-  socket.on("someone-left-the-chat", (user) => {
-    if (!leftChatProcessed.current) {
+      if (id === socket.id) {
+        chatJoinedMessage.textContent = "You joined the chat";
+      } else {
+        chatJoinedMessage.textContent = id + " joined the chat";
+      }
+
+      // adding to messages
+      if (messagesRef.current) {
+        messagesRef.current.appendChild(chatJoinedMessage);
+      }
+    });
+
+    // when someone left the chat
+    socket.on("someone-left-the-chat", (user) => {
       const chatLeftMessage = document.createElement("p");
       chatLeftMessage.textContent = user + " left the chat";
 
-      chatLeftMessage.classList.add("text-center", "text-sm", "mx-2");
+      chatLeftMessage.classList.add(
+        "text-center",
+        "text-sm",
+        "mx-2",
+        "bg-red-400"
+      );
 
       if (messagesRef.current) {
         messagesRef.current.appendChild(chatLeftMessage);
       }
-
-      // Set the flag to true after processing the event
-      leftChatProcessed.current = true;
-    }
-  });
+    });
+  }, []);
 
   // send message
   const sendMessage = (e) => {
@@ -57,7 +80,7 @@ function App() {
   };
 
   return (
-    <main className="h-screen flex flex-col">
+    <main className="h-screen flex flex-col ">
       <div className="messages flex-grow overflow-y-auto" ref={messagesRef}>
         {messages.map((message, index) => (
           <p
